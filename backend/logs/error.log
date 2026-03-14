@@ -1,4 +1,0 @@
-{"level":"error","message":"Email send failed:","service":"things-api","timestamp":"2026-03-14T14:49:51.233Z"}
-{"level":"error","message":"AI insights error:","service":"things-api","timestamp":"2026-03-14T14:50:27.116Z"}
-{"level":"error","message":"401 - 401 {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"},\"request_id\":\"req_011CZ3ACQhBvMsshkrUDBUfY\"} - /api/insights - GET - ::1","service":"things-api","timestamp":"2026-03-14T14:50:27.117Z"}
-{"level":"error","message":"500 - No matching document found for id \"69b5758e791f28188b0865b7\" version 1 modifiedPaths \"refreshTokens\" - /api/auth/refresh - POST - ::1","service":"things-api","timestamp":"2026-03-14T14:52:19.334Z"}
