@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
-import api from '../services/api';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import api from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -12,13 +19,19 @@ const initialState = {
 
 const reducer = (state, action) => {
   switch (action.type) {
-    case 'LOGIN':
-      return { ...state, user: action.user, accessToken: action.accessToken, isAuthenticated: true, isLoading: false };
-    case 'LOGOUT':
+    case "LOGIN":
+      return {
+        ...state,
+        user: action.user,
+        accessToken: action.accessToken,
+        isAuthenticated: true,
+        isLoading: false,
+      };
+    case "LOGOUT":
       return { ...initialState, isLoading: false };
-    case 'UPDATE_USER':
+    case "UPDATE_USER":
       return { ...state, user: { ...state.user, ...action.updates } };
-    case 'SET_LOADING':
+    case "SET_LOADING":
       return { ...state, isLoading: action.value };
     default:
       return state;
@@ -34,36 +47,50 @@ export const AuthProvider = ({ children }) => {
   // Refresh token: httpOnly cookie would be ideal in production;
   //   here we use sessionStorage as a pragmatic React-only approach
   const storeRefreshToken = (token) => {
-    try { sessionStorage.setItem('_rt', token); } catch {}
+    try {
+      sessionStorage.setItem("_rt", token);
+    } catch {}
   };
   const getRefreshToken = () => {
-    try { return sessionStorage.getItem('_rt'); } catch { return null; }
+    try {
+      return sessionStorage.getItem("_rt");
+    } catch {
+      return null;
+    }
   };
   const clearRefreshToken = () => {
-    try { sessionStorage.removeItem('_rt'); } catch {}
+    try {
+      sessionStorage.removeItem("_rt");
+    } catch {}
   };
 
   // ── Schedule silent token refresh ────────────────────────────
-  const scheduleRefresh = useCallback((expiresInMs = 6 * 24 * 60 * 60 * 1000) => {
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    const delay = Math.max(expiresInMs - 5 * 60 * 1000, 60 * 1000); // refresh 5 min before expiry
-    refreshTimerRef.current = setTimeout(() => silentRefresh(), delay);
-  }, []);
+  const scheduleRefresh = useCallback(
+    (expiresInMs = 6 * 24 * 60 * 60 * 1000) => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      const delay = Math.max(expiresInMs - 5 * 60 * 1000, 60 * 1000); // refresh 5 min before expiry
+      refreshTimerRef.current = setTimeout(() => silentRefresh(), delay);
+    },
+    [silentRefresh],
+  );
 
   const silentRefresh = useCallback(async () => {
     const rt = getRefreshToken();
-    if (!rt) { dispatch({ type: 'LOGOUT' }); return; }
+    if (!rt) {
+      dispatch({ type: "LOGOUT" });
+      return;
+    }
     try {
-      const res = await api.post('/auth/refresh', { refreshToken: rt });
+      const res = await api.post("/auth/refresh", { refreshToken: rt });
       const { accessToken, refreshToken: newRt, user } = res.data;
       storeRefreshToken(newRt);
-      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-      dispatch({ type: 'LOGIN', user, accessToken });
+      api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+      dispatch({ type: "LOGIN", user, accessToken });
       scheduleRefresh();
     } catch {
-      dispatch({ type: 'LOGOUT' });
+      dispatch({ type: "LOGOUT" });
       clearRefreshToken();
-      delete api.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common["Authorization"];
     }
   }, [scheduleRefresh]);
 
@@ -73,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     if (rt) {
       silentRefresh();
     } else {
-      dispatch({ type: 'SET_LOADING', value: false });
+      dispatch({ type: "SET_LOADING", value: false });
     }
     return () => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
@@ -82,22 +109,27 @@ export const AuthProvider = ({ children }) => {
 
   // ── Login ─────────────────────────────────────────────────────
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
+    const res = await api.post("/auth/login", { email, password });
     const { accessToken, refreshToken, user } = res.data;
     storeRefreshToken(refreshToken);
-    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-    dispatch({ type: 'LOGIN', user, accessToken });
+    api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+    dispatch({ type: "LOGIN", user, accessToken });
     scheduleRefresh();
     return user;
   };
 
   // ── Register ──────────────────────────────────────────────────
   const register = async (name, email, password, timezone) => {
-    const res = await api.post('/auth/register', { name, email, password, timezone });
+    const res = await api.post("/auth/register", {
+      name,
+      email,
+      password,
+      timezone,
+    });
     const { accessToken, refreshToken, user } = res.data;
     storeRefreshToken(refreshToken);
-    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-    dispatch({ type: 'LOGIN', user, accessToken });
+    api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+    dispatch({ type: "LOGIN", user, accessToken });
     scheduleRefresh();
     return user;
   };
@@ -106,36 +138,38 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     const rt = getRefreshToken();
     try {
-      await api.post('/auth/logout', { refreshToken: rt });
+      await api.post("/auth/logout", { refreshToken: rt });
     } catch {}
     clearRefreshToken();
-    delete api.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common["Authorization"];
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    dispatch({ type: 'LOGOUT' });
+    dispatch({ type: "LOGOUT" });
   };
 
   // ── Update profile ────────────────────────────────────────────
   const updateProfile = async (updates) => {
-    const res = await api.patch('/auth/profile', updates);
-    dispatch({ type: 'UPDATE_USER', updates: res.data.user });
+    const res = await api.patch("/auth/profile", updates);
+    dispatch({ type: "UPDATE_USER", updates: res.data.user });
     return res.data.user;
   };
 
   // ── Change password ───────────────────────────────────────────
   const changePassword = async (currentPassword, newPassword) => {
-    await api.patch('/auth/password', { currentPassword, newPassword });
+    await api.patch("/auth/password", { currentPassword, newPassword });
   };
 
   return (
-    <AuthContext.Provider value={{
-      ...state,
-      login,
-      register,
-      logout,
-      updateProfile,
-      changePassword,
-      silentRefresh,
-    }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        register,
+        logout,
+        updateProfile,
+        changePassword,
+        silentRefresh,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -143,6 +177,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };
