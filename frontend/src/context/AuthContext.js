@@ -42,10 +42,6 @@ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const refreshTimerRef = useRef(null);
 
-  // ── Secure token storage ──────────────────────────────────────
-  // Access token: memory only (never localStorage — XSS safe)
-  // Refresh token: httpOnly cookie would be ideal in production;
-  //   here we use sessionStorage as a pragmatic React-only approach
   const storeRefreshToken = (token) => {
     try {
       sessionStorage.setItem("_rt", token);
@@ -64,16 +60,35 @@ export const AuthProvider = ({ children }) => {
     } catch {}
   };
 
-  // ── Schedule silent token refresh ────────────────────────────
+  // ── Schedule refresh ──────────────────────────────────────────
   const scheduleRefresh = useCallback(
     (expiresInMs = 6 * 24 * 60 * 60 * 1000) => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-      const delay = Math.max(expiresInMs - 5 * 60 * 1000, 60 * 1000); // refresh 5 min before expiry
-      refreshTimerRef.current = setTimeout(() => silentRefresh(), delay);
+      const delay = Math.max(expiresInMs - 5 * 60 * 1000, 60 * 1000);
+      refreshTimerRef.current = setTimeout(async () => {
+        const rt = getRefreshToken();
+        if (!rt) {
+          dispatch({ type: "LOGOUT" });
+          return;
+        }
+        try {
+          const res = await api.post("/auth/refresh", { refreshToken: rt });
+          const { accessToken, refreshToken: newRt, user } = res.data;
+          storeRefreshToken(newRt);
+          api.defaults.headers.common["Authorization"] =
+            `Bearer ${accessToken}`;
+          dispatch({ type: "LOGIN", user, accessToken });
+        } catch {
+          dispatch({ type: "LOGOUT" });
+          clearRefreshToken();
+          delete api.defaults.headers.common["Authorization"];
+        }
+      }, delay);
     },
-    [silentRefresh],
+    [],
   );
 
+  // ── Silent refresh ────────────────────────────────────────────
   const silentRefresh = useCallback(async () => {
     const rt = getRefreshToken();
     if (!rt) {
@@ -94,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [scheduleRefresh]);
 
-  // ── Boot: restore session ─────────────────────────────────────
+  // ── Boot ──────────────────────────────────────────────────────
   useEffect(() => {
     const rt = getRefreshToken();
     if (rt) {
@@ -107,7 +122,6 @@ export const AuthProvider = ({ children }) => {
     };
   }, [silentRefresh]);
 
-  // ── Login ─────────────────────────────────────────────────────
   const login = async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
     const { accessToken, refreshToken, user } = res.data;
@@ -118,7 +132,6 @@ export const AuthProvider = ({ children }) => {
     return user;
   };
 
-  // ── Register ──────────────────────────────────────────────────
   const register = async (name, email, password, timezone) => {
     const res = await api.post("/auth/register", {
       name,
@@ -134,7 +147,6 @@ export const AuthProvider = ({ children }) => {
     return user;
   };
 
-  // ── Logout ────────────────────────────────────────────────────
   const logout = async () => {
     const rt = getRefreshToken();
     try {
@@ -146,14 +158,12 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: "LOGOUT" });
   };
 
-  // ── Update profile ────────────────────────────────────────────
   const updateProfile = async (updates) => {
     const res = await api.patch("/auth/profile", updates);
     dispatch({ type: "UPDATE_USER", updates: res.data.user });
     return res.data.user;
   };
 
-  // ── Change password ───────────────────────────────────────────
   const changePassword = async (currentPassword, newPassword) => {
     await api.patch("/auth/password", { currentPassword, newPassword });
   };
