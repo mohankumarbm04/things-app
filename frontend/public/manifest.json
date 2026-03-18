@@ -3,13 +3,20 @@
   "name": "THINGS — Personal Life OS",
   "description": "Your AI-powered Personal Life Operating System",
   "icons": [
-    { "src": "favicon.ico",  "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
-    { "src": "logo192.png",  "type": "image/png", "sizes": "192x192" },
-    { "src": "logo512.png",  "type": "image/png", "sizes": "512x512" }
+    { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#7C3AED",
   "background_color": "#000000",
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "productivity"],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "/", "description": "Go to Dashboard" },
+    { "name": "Habits", "url": "/habits", "description": "Track your habits" },
+    { "name": "Focus", "url": "/focus", "description": "Start a focus session" }
+  ]
 }
