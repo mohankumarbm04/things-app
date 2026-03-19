@@ -442,3 +442,156 @@ img { max-width: 100%; }
 @media (max-width: 480px) {
   .main-content { padding: 12px; }
 }
+/* ── MOBILE APP STYLES — add these to the bottom of globals.css ── */
+ 
+/* Safe area for notched phones (iPhone X+) */
+:root {
+  --bottom-nav-height: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+ 
+/* On mobile, add padding so content doesn't hide behind bottom nav */
+@media (max-width: 767px) {
+  .main-content {
+    padding: 16px 14px;
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 16px);
+    max-width: 100%;
+  }
+ 
+  /* Mobile header shown on each page */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+ 
+  .mobile-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+ 
+  /* Bigger touch targets on mobile */
+  .btn {
+    min-height: 44px;
+    padding: 10px 18px;
+  }
+ 
+  .btn-sm {
+    min-height: 36px;
+    padding: 6px 14px;
+  }
+ 
+  /* Full-width cards on mobile */
+  .bento {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+ 
+  .col-3, .col-4, .col-5,
+  .col-6, .col-7, .col-8, .col-12 {
+    grid-column: span 1;
+  }
+ 
+  /* Larger form inputs for mobile (prevents zoom on iOS) */
+  .form-input,
+  .form-select,
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+ 
+  /* Modal full screen on mobile */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+ 
+  .modal {
+    width: 100%;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 24px 20px;
+    padding-bottom: calc(20px + var(--safe-bottom));
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+ 
+  /* Stat cards stacked on mobile */
+  .stat-card {
+    padding: 14px 16px;
+  }
+ 
+  /* Card padding reduced on mobile */
+  .card {
+    padding: 16px;
+  }
+ 
+  /* Toasts at bottom above nav */
+  .react-hot-toast {
+    bottom: calc(var(--bottom-nav-height) + 12px) !important;
+  }
+}
+ 
+/* Extra small phones */
+@media (max-width: 380px) {
+  .main-content {
+    padding: 12px 10px;
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px);
+  }
+ 
+  .mobile-header h1 {
+    font-size: 19px;
+  }
+}
+ 
+/* Desktop — hide mobile-only elements */
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+  .mobile-header { display: none; }
+}
+ 
+/* Mobile — hide desktop-only elements */
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+}
+ 
+/* ── Pull to refresh indicator ──────────────────────────────────── */
+.pull-indicator {
+  text-align: center;
+  padding: 10px;
+  color: var(--text3);
+  font-size: 12px;
+}
+ 
+/* ── Mobile page title (shown in top left on mobile) ───────────── */
+.page-title-mobile {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+ 
+/* ── Swipeable cards ────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .swipe-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+}
+ 
+/* ── Tap highlight removal (feels more native) ──────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+ 
+/* ── Active state for touch (press feedback) ────────────────────── */
+.btn:active,
+.card:active,
+button:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}

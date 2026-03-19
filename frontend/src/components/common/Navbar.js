@@ -1,27 +1,97 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const NAV_ITEMS = [
-  { path: '/',          label: 'Dashboard', icon: '⊞' },
+  { path: '/',          label: 'Home',      icon: '⊞' },
   { path: '/habits',    label: 'Habits',    icon: '🎯' },
   { path: '/focus',     label: 'Focus',     icon: '⏱' },
-  { path: '/analytics', label: 'Analytics', icon: '📊' },
+  { path: '/analytics', label: 'Stats',     icon: '📊' },
+  { path: '/settings',  label: 'Settings',  icon: '⚙️' },
 ];
 
 const ThemeIcon = ({ theme }) => {
-  if (theme === 'dark')   return <span style={{fontSize:14}}>🌙</span>;
-  if (theme === 'light')  return <span style={{fontSize:14}}>☀️</span>;
+  if (theme === 'dark')  return <span style={{fontSize:14}}>🌙</span>;
+  if (theme === 'light') return <span style={{fontSize:14}}>☀️</span>;
   return <span style={{fontSize:14}}>💻</span>;
 };
 
-export default function Navbar() {
-  const { user, logout } = useAuth();
+// ── Bottom Nav (Mobile) ──────────────────────────────────────────
+function BottomNav({ user }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  return (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 64,
+      background: 'var(--bg)',
+      borderTop: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      zIndex: 200,
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      backdropFilter: 'blur(20px)',
+    }}>
+      {NAV_ITEMS.map(item => {
+        const isActive = item.path === '/'
+          ? location.pathname === '/'
+          : location.pathname.startsWith(item.path);
+        return (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.path === '/'}
+            style={{ textDecoration: 'none', flex: 1 }}
+          >
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 3,
+              padding: '6px 0',
+              position: 'relative',
+            }}>
+              {isActive && (
+                <motion.div
+                  layoutId="bottomNavIndicator"
+                  style={{
+                    position: 'absolute',
+                    top: -1,
+                    width: 24,
+                    height: 3,
+                    background: 'var(--primary)',
+                    borderRadius: '0 0 4px 4px',
+                  }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                />
+              )}
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{item.icon}</span>
+              <span style={{
+                fontSize: 10,
+                fontWeight: isActive ? 600 : 400,
+                color: isActive ? 'var(--primary)' : 'var(--text3)',
+                transition: 'color 0.2s',
+              }}>{item.label}</span>
+            </div>
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ── Top Nav (Desktop) ────────────────────────────────────────────
+function TopNav({ user, logout }) {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen]   = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -58,12 +128,10 @@ export default function Navbar() {
       zIndex: 200,
       backdropFilter: 'blur(20px)',
     }}>
-      {/* Logo */}
       <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: -1, cursor: 'pointer' }} onClick={() => navigate('/')}>
         THINGS<span style={{ color: 'var(--primary)' }}>.</span>
       </div>
 
-      {/* Nav tabs */}
       <div style={{ display: 'flex', gap: 2, background: 'var(--card)', padding: 3, borderRadius: 12, border: '1px solid var(--border)' }}>
         {NAV_ITEMS.map(item => (
           <NavLink
@@ -89,10 +157,7 @@ export default function Navbar() {
         ))}
       </div>
 
-      {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }} ref={menuRef}>
-
-        {/* Theme toggle */}
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => { setThemeOpen(o => !o); setMenuOpen(false); }}
@@ -100,13 +165,11 @@ export default function Navbar() {
               width: 34, height: 34, borderRadius: 9,
               background: 'var(--card2)', border: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', transition: 'var(--transition)',
+              cursor: 'pointer',
             }}
-            title="Change theme"
           >
             <ThemeIcon theme={theme} />
           </button>
-
           <AnimatePresence>
             {themeOpen && (
               <motion.div
@@ -139,7 +202,7 @@ export default function Navbar() {
                     }}
                   >
                     {label}
-                    {theme === val && <span style={{ marginLeft: 'auto', color: 'var(--primary)' }}>✓</span>}
+                    {theme === val && <span style={{ marginLeft: 'auto' }}>✓</span>}
                   </button>
                 ))}
               </motion.div>
@@ -147,7 +210,6 @@ export default function Navbar() {
           </AnimatePresence>
         </div>
 
-        {/* Avatar + menu */}
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => { setMenuOpen(o => !o); setThemeOpen(false); }}
@@ -157,13 +219,10 @@ export default function Navbar() {
               border: '2px solid var(--border2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer',
-              transition: 'var(--transition)',
             }}
-            title={user?.name}
           >
             {initials}
           </button>
-
           <AnimatePresence>
             {menuOpen && (
               <motion.div
@@ -182,18 +241,15 @@ export default function Navbar() {
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{user?.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{user?.email}</div>
                 </div>
-
                 {[
-                  { label: '⚙️  Settings',       action: () => { navigate('/settings'); setMenuOpen(false); } },
-                  { label: '📊  Analytics',       action: () => { navigate('/analytics'); setMenuOpen(false); } },
-                  { label: '🔔  Notifications',   action: () => { navigate('/settings#notifications'); setMenuOpen(false); } },
+                  { label: '⚙️  Settings',  action: () => { navigate('/settings'); setMenuOpen(false); } },
+                  { label: '📊  Analytics', action: () => { navigate('/analytics'); setMenuOpen(false); } },
                 ].map(item => (
                   <button key={item.label} onClick={item.action} style={{
                     display: 'flex', width: '100%', padding: '9px 10px',
                     borderRadius: 8, background: 'transparent', border: 'none',
-                    color: 'var(--text2)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                    color: 'var(--text2)', cursor: 'pointer', fontSize: 13,
                     fontFamily: 'var(--font-ui)', textAlign: 'left',
-                    transition: 'var(--transition)',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--card2)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -201,12 +257,11 @@ export default function Navbar() {
                     {item.label}
                   </button>
                 ))}
-
                 <div style={{ borderTop: '1px solid var(--border)', marginTop: 4, paddingTop: 4 }}>
                   <button onClick={handleLogout} style={{
                     display: 'flex', width: '100%', padding: '9px 10px',
                     borderRadius: 8, background: 'transparent', border: 'none',
-                    color: 'var(--danger)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                    color: 'var(--danger)', cursor: 'pointer', fontSize: 13,
                     fontFamily: 'var(--font-ui)', textAlign: 'left',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--danger-light)'}
@@ -222,4 +277,19 @@ export default function Navbar() {
       </div>
     </nav>
   );
+}
+
+// ── Main Navbar (switches between mobile/desktop) ────────────────
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  if (isMobile) return <BottomNav user={user} logout={logout} />;
+  return <TopNav user={user} logout={logout} />;
 }
